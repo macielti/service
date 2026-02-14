@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions
 of [keepachangelog.com](http://keepachangelog.com/).
 
+## 7.4.4 - 2026-02-14
+
+### Fixed
+
+- Update Dependencies and fix version conflicts.
+
 ## 7.4.3 - 2026-01-11
 
 ### Changed

@@ -1,7 +1,6 @@
 (ns service-component.interceptors
   (:require [cheshire.core :as json]
             [clojure.tools.logging :as log]
-            [common-clj.time.parser.core :as time.parser]
             [humanize.schema :as h]
             [iapetos.core :as prometheus]
             [io.pedestal.interceptor :as pedestal.interceptor]
@@ -74,7 +73,7 @@
                (dissoc context ::start-ms)))}))
 
 (def ^:private coercions
-  {LocalDate (fn [input] (time.parser/str->local-date "yyyy-MM-dd" input))})
+  {LocalDate (fn [input] (LocalDate/parse input))})
 
 (defn ^:private coercions-matcher
   [schema]

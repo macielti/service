@@ -1,4 +1,4 @@
-(defproject net.clojars.macielti/service-component "7.4.3"
+(defproject net.clojars.macielti/service-component "7.4.4"
 
   :description "Service Component is a Pedestal service Integrant component"
 
@@ -8,6 +8,7 @@
             :url  "https://www.eclipse.org/legal/epl-2.0/"}
 
   :dependencies [[org.clojure/clojure "1.12.4"]
+                 [net.clojars.macielti/common-clj "46.0.0"]
                  [io.pedestal/pedestal.service "0.8.1"]
                  [com.vodori/schema-conformer "0.1.2"]
                  [io.pedestal/pedestal.jetty "0.8.1"]
@@ -25,9 +26,8 @@
                                     [com.github.clojure-lsp/lein-clojure-lsp "2.0.13"]
                                     [com.github.liquidz/antq "RELEASE"]]
 
-                   :dependencies   [[net.clojars.macielti/common-clj "43.74.77"]
-                                    [prismatic/schema "1.4.1"]
-                                    [nubank/matcher-combinators "3.9.2"]
+                   :dependencies   [[prismatic/schema "1.4.1"]
+                                    [nubank/matcher-combinators "3.10.0"]
                                     [com.taoensso/timbre "6.8.0"]
                                     [hashp "0.2.2"]]
 
