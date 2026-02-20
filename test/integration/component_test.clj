@@ -1,4 +1,4 @@
-(ns service-component-test
+(ns component-test
   (:require [cheshire.core :as json]
             [clojure.string :as str]
             [clojure.test :refer [is testing]]
@@ -41,7 +41,7 @@
                                                    :prometheus (ig/ref ::component.prometheus/prometheus)
                                                    :routes     (ig/ref ::component.routes/routes)}}})
 
-(s/deftest service-component-test
+(s/deftest component-test
   (let [system (ig/init system-components)
         connector (-> system ::component.service/service)
         prometheus-registry (-> system ::component.prometheus/prometheus :registry)]

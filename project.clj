@@ -1,8 +1,8 @@
 (defproject net.clojars.macielti/service "0.1.0"
 
-  :description "Service Component is a Pedestal service Integrant component"
+  :description "Service is a Pedestal service Integrant component"
 
-  :url "https://github.com/macielti/service-component"
+  :url "https://github.com/macielti/service"
 
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url  "https://www.eclipse.org/legal/epl-2.0/"}

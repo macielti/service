@@ -1,3 +1,3 @@
-# Introduction to service-component
+# Introduction to `service`
 
 TODO: write [great documentation](http://jacobian.org/writing/what-to-write/)

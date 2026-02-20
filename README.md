@@ -1,15 +1,15 @@
 [![Clojars Project](https://img.shields.io/clojars/v/net.clojars.macielti/service-component.svg)](https://clojars.org/net.clojars.macielti/service-component)
 ![Compatible with GraalVM](https://img.shields.io/badge/compatible_with-GraalVM-green)
 
-# Service Component
+# Service
 
-Service Component is a Pedestal service Integrant component.
+Service is a Pedestal service Integrant component.
 
 If you will be using this library in a project intended to be compiled using GraalVM, you should add the following
 dependencies to your project:
 
 ``` clojure
-  [net.clojars.macielti/service-component "x.y.z"]
+  [net.clojars.macielti/service "x.y.z"]
   [io.pedestal/pedestal.service "0.8.1"]
   [io.pedestal/pedestal.jetty "0.8.1"]
   [io.pedestal/pedestal.error "0.8.1"]
