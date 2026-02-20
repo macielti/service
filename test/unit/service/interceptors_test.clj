@@ -1,10 +1,10 @@
-(ns service-component.interceptors-test
+(ns service.interceptors-test
   (:require [clojure.test :refer [is]]
             [io.pedestal.interceptor.chain :as chain]
             [matcher-combinators.test :refer [match?]]
             [schema.core]
             [schema.test :as s]
-            [service-component.interceptors :as interceptors])
+            [service.interceptors :as interceptors])
   (:import (clojure.lang ExceptionInfo)
            (java.time LocalDate)))
 

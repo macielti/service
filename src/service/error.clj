@@ -1,4 +1,4 @@
-(ns service-component.error
+(ns service.error
   (:require [schema.core :as s]))
 
 (s/defn http-friendly-exception

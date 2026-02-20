@@ -1,9 +1,9 @@
-(ns service-component.core
+(ns service.component
   (:require [clojure.tools.logging :as log]
             [integrant.core :as ig]
             [io.pedestal.connector]
             [io.pedestal.http.jetty :as jetty]
-            [service-component.interceptors :as io.interceptors]))
+            [service.interceptors :as io.interceptors]))
 
 (defmethod ig/init-key ::service
   [_ {:keys [components]}]

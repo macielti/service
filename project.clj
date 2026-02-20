@@ -1,4 +1,4 @@
-(defproject net.clojars.macielti/service-component "7.4.4"
+(defproject net.clojars.macielti/service "0.1.0"
 
   :description "Service Component is a Pedestal service Integrant component"
 
@@ -41,6 +41,6 @@
                                     "format-fix"   ["clojure-lsp" "format"]
                                     "lint-fix"     ["do" ["clean-ns-fix"] ["format-fix"]]}
 
-                   :repl-options   {:init-ns service-component.core}}}
+                   :repl-options   {:init-ns service.component}}}
 
   :resource-paths ["resources"])

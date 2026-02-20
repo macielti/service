@@ -1,4 +1,4 @@
-(ns service-component.interceptors
+(ns service.interceptors
   (:require [cheshire.core :as json]
             [clojure.tools.logging :as log]
             [humanize.schema :as h]
@@ -8,7 +8,7 @@
             [schema.coerce :as coerce]
             [schema.core]
             [schema.utils]
-            [service-component.error :as common-error])
+            [service.error :as common-error])
   (:import (java.time LocalDate)))
 
 (def error-handler-interceptor

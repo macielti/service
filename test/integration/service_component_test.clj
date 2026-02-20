@@ -12,8 +12,8 @@
             [matcher-combinators.test :refer [match?]]
             [schema.core :as schema]
             [schema.test :as s]
-            [service-component.core :as component.service]
-            [service-component.interceptors :as interceptors]))
+            [service.component :as component.service]
+            [service.interceptors :as interceptors]))
 
 (def test-state (atom nil))
 
