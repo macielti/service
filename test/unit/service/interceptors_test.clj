@@ -22,7 +22,7 @@
     (is (match? {:status  422
                  :error   "invalid-payload-for-query-params"
                  :message "The system detected that the received data is invalid."
-                 :detail  {:hello "Missing required key"}}
+                 :detail  "{:hello \"Missing required key\"}"}
                 (ex-data ex))))
 
   (is (match? {:request {:query-params {:hello "world"}}}
@@ -33,6 +33,26 @@
 
   (is (match? {:request {:query-params {:reference-date (LocalDate/of 1998 12 26)}}}
               (chain/execute {:request {:query-params {:reference-date "1998-12-26"}}} [(interceptors/query-params-schema QueryParamsWithDate)]))))
+
+(schema.core/defschema PathParams
+  {:id schema.core/Uuid})
+
+(schema.core/defschema PathParamsWithDate
+  {:reference-date LocalDate})
+
+(s/deftest path-params-schema-test
+  (is (match? {:status  422
+               :error   "invalid-payload-for-path-params"
+               :message "The system detected that the received data is invalid."
+               :detail  "{:id \"Missing required key\"}"}
+              (ex-data (is (thrown? ExceptionInfo (chain/execute {} [(interceptors/path-params-schema PathParams)]))))))
+
+  (let [id (random-uuid)]
+    (is (match? {:request {:query-params {:id id}}}
+                (chain/execute {:request {:path-params {:id (str id)}}} [(interceptors/path-params-schema PathParams)]))))
+
+  (is (match? {:request {:query-params {:reference-date (LocalDate/of 1998 12 26)}}}
+              (chain/execute {:request {:path-params {:reference-date "1998-12-26"}}} [(interceptors/path-params-schema PathParamsWithDate)]))))
 
 (schema.core/defschema EqKeywordSchema
   {:type (schema.core/eq :hello-world)})

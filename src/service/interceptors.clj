@@ -1,33 +1,37 @@
 (ns service.interceptors
   (:require [cheshire.core :as json]
+            [clojure.core.match]
             [clojure.tools.logging :as log]
             [humanize.schema :as h]
             [iapetos.core :as prometheus]
             [io.pedestal.interceptor :as pedestal.interceptor]
-            [io.pedestal.interceptor.error :as error]
             [schema.coerce :as coerce]
+            [schema.core :as s]
             [schema.core]
             [schema.utils]
             [service.error :as common-error])
   (:import (java.time LocalDate)))
 
 (def error-handler-interceptor
-  (error/error-dispatch [ctx ex]
-                        [{:exception-type :clojure.lang.ExceptionInfo}]
-                        (let [{:keys [status error message detail]} (ex-data ex)]
-                          (assoc ctx :response {:status  status
-                                                :headers {"Content-Type" "application/json;charset=UTF-8"}
-                                                :body    (json/encode {:error   error
-                                                                       :message message
-                                                                       :detail  detail})}))
+  (pedestal.interceptor/interceptor
+   {:name  ::error-handler
+    :error (fn [ctx ex]
+             (clojure.core.match/match [(ex-data ex)]
+               [{:exception-type :clojure.lang.ExceptionInfo}]
+               (let [{:keys [status error message detail]} (ex-data ex)]
+                 (assoc ctx :response {:status  status
+                                       :headers {"Content-Type" "application/json;charset=UTF-8"}
+                                       :body    (json/encode {:error   error
+                                                              :message message
+                                                              :detail  detail})}))
 
-                        :else
-                        (do (log/error ex)
-                            (assoc ctx :response {:status  500
-                                                  :headers {"Content-Type" "application/json;charset=UTF-8"}
-                                                  :body    (json/encode {:error   "unexpected-server-error"
-                                                                         :message "Internal Server Error"
-                                                                         :detail  "Internal Server Error"})}))))
+               :else
+               (do (log/error ex)
+                   (assoc ctx :response {:status  500
+                                         :headers {"Content-Type" "application/json;charset=UTF-8"}
+                                         :body    (json/encode {:error   "unexpected-server-error"
+                                                                :message "Internal Server Error"
+                                                                :detail  "Internal Server Error"})}))))}))
 
 (defn components-interceptor [system-components]
   (pedestal.interceptor/interceptor
@@ -73,7 +77,8 @@
                (dissoc context ::start-ms)))}))
 
 (def ^:private coercions
-  {LocalDate (fn [input] (LocalDate/parse input))})
+  {LocalDate (fn [input] (LocalDate/parse input))
+   s/Uuid    (fn [input] (parse-uuid input))})
 
 (defn ^:private coercions-matcher
   [schema]
@@ -89,5 +94,18 @@
                  (common-error/http-friendly-exception 422
                                                        "invalid-payload-for-query-params"
                                                        "The system detected that the received data is invalid."
-                                                       (-> (schema.utils/error-val query-params') h/explain)))
+                                                       (-> (schema.utils/error-val query-params') h/explain str)))
                (assoc-in context [:request :query-params] query-params')))}))
+
+(defn path-params-schema [schema]
+  (pedestal.interceptor/interceptor
+   {:name  ::path-params-schema
+    :enter (fn [{{:keys [path-params]} :request :as context}]
+             (let [coercer-fn (coerce/coercer schema coercions-matcher)
+                   path-params' (coercer-fn (or path-params {}))]
+               (when (schema.utils/error? path-params')
+                 (common-error/http-friendly-exception 422
+                                                       "invalid-payload-for-path-params"
+                                                       "The system detected that the received data is invalid."
+                                                       (-> (schema.utils/error-val path-params') h/explain str)))
+               (assoc-in context [:request :query-params] path-params')))}))
