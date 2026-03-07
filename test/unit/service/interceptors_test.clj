@@ -48,10 +48,10 @@
               (ex-data (is (thrown? ExceptionInfo (chain/execute {} [(interceptors/path-params-schema PathParams)]))))))
 
   (let [id (random-uuid)]
-    (is (match? {:request {:query-params {:id id}}}
+    (is (match? {:request {:path-params {:id id}}}
                 (chain/execute {:request {:path-params {:id (str id)}}} [(interceptors/path-params-schema PathParams)]))))
 
-  (is (match? {:request {:query-params {:reference-date (LocalDate/of 1998 12 26)}}}
+  (is (match? {:request {:path-params {:reference-date (LocalDate/of 1998 12 26)}}}
               (chain/execute {:request {:path-params {:reference-date "1998-12-26"}}} [(interceptors/path-params-schema PathParamsWithDate)]))))
 
 (schema.core/defschema EqKeywordSchema

@@ -108,4 +108,4 @@
                                                        "invalid-payload-for-path-params"
                                                        "The system detected that the received data is invalid."
                                                        (-> (schema.utils/error-val path-params') h/explain str)))
-               (assoc-in context [:request :query-params] path-params')))}))
+               (assoc-in context [:request :path-params] path-params')))}))
