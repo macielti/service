@@ -5,9 +5,6 @@
             [io.pedestal.http.jetty :as jetty]
             [service.interceptors :as io.interceptors]))
 
-;; Default Jetty idle timeout in milliseconds.
-;; Consumers can override this by setting :idle-timeout-ms in their service config.
-;; e.g., {:service {:host "0.0.0.0" :port 8080 :idle-timeout-ms 60000}}
 (def ^:private default-idle-timeout-ms 30000)
 
 (def ^:private allow-all-origins (constantly true))
