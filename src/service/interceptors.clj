@@ -6,7 +6,6 @@
             [iapetos.core :as prometheus]
             [io.pedestal.interceptor :as pedestal.interceptor]
             [schema.coerce :as coerce]
-            [schema.core :as s]
             [schema.core]
             [schema.utils]
             [service.error :as common-error])
@@ -78,7 +77,7 @@
 
 (def ^:private coercions
   {LocalDate (fn [input] (LocalDate/parse input))
-   s/Uuid    (fn [input] (parse-uuid input))})
+   schema.core/Uuid    (fn [input] (parse-uuid input))})
 
 (defn ^:private coercions-matcher
   [schema]

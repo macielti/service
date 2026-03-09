@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions
 of [keepachangelog.com](http://keepachangelog.com/).
 
+## 0.3.7 - 2026-03-08
+
+### Added
+
+- Configurable Jetty idle timeout via `:idle-timeout-ms` option (defaults to `30000` ms).
+- Configurable CORS allowed origins via `:allowed-origins` option (defaults to allowing all origins).
+- Documentation for service configuration options in README.
+
+### Changed
+
+- Upgraded `common-clj` dependency from `46.0.0` to `46.1.4`.
+- Upgraded `lein-clojure-lsp` plugin from `2.0.13` to `2.0.14`.
+
 ## 0.3.6 - 2026-03-07
 
 ### Added

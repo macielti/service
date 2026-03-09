@@ -15,6 +15,30 @@ dependencies to your project:
   [io.pedestal/pedestal.error "0.8.1"]
 ```
 
+## Configuration
+
+The service component accepts configuration through the `:service` key in your config map. The following options are available:
+
+| Key                 | Type                | Required | Default        | Description                                                                          |
+|---------------------|---------------------|----------|----------------|--------------------------------------------------------------------------------------|
+| `:host`             | String              | Yes      | —              | The host address to bind the server to (e.g., `"0.0.0.0"`).                         |
+| `:port`             | Integer             | Yes      | —              | The port number to listen on (e.g., `8080`).                                         |
+| `:idle-timeout-ms`  | Integer             | No       | `30000`        | Jetty idle timeout in milliseconds. Connections idle beyond this duration are closed. |
+| `:allowed-origins`  | Collection\<String> | No       | Allow all origins | A collection of allowed origin strings for CORS. When provided, only the specified origins are permitted. When omitted or empty, all origins are allowed. |
+
+### Example
+
+```clojure
+{:service {:host            "0.0.0.0"
+           :port            8080
+           :idle-timeout-ms 60000                                     ;; 60 seconds
+           :allowed-origins ["https://example.com" "https://app.example.com"]}}
+```
+
+> **Note:** If `:idle-timeout-ms` is not provided, a default of **30 seconds** (`30000` ms) is applied to prevent long-running or stalled requests from tying up server threads indefinitely.
+
+> **Note:** If `:allowed-origins` is not provided or is empty, the server will accept requests from **any origin**. In production, it is recommended to explicitly list trusted origins to prevent unwanted cross-origin access.
+
 ## License
 
 Copyright © 2024 Bruno do Nascimento Maciel
