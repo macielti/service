@@ -22,7 +22,12 @@
                                   (Thread/sleep 500)
                                   {:status 200
                                    :body   {:message "done"}})]
-              :route-name :blocking]])
+              :route-name :blocking]
+             ["/thread-info" :get [pedestal.service.interceptors/json-body
+                                   (fn [_]
+                                     {:status 200
+                                      :body   {:virtual? (.isVirtual (Thread/currentThread))}})]
+              :route-name :thread-info]])
 
 (def system-components
   {::component.config/config         {:path "test/resources/config.example.edn"
@@ -55,11 +60,40 @@
                                                :max-threads    16
                                                :max-queue-size 50}}))]
 
-      ;; Verify service starts with custom config
       (is (match? {:status 200}
                   (http/get "http://localhost:8080/test"
                             {:headers          {"authorization" "Bearer test-token"}
                              :throw-exceptions false})))
+
+      (ig/halt! system))))
+
+(s/deftest virtual-threads-enabled-by-default-test
+  (testing "Handler threads are virtual when :use-virtual-threads is not set"
+    (let [system (ig/init system-components)
+          response (http/get "http://localhost:8080/thread-info"
+                             {:as               :json
+                              :throw-exceptions false})]
+
+      (is (match? {:status 200} response))
+      (is (true? (-> response :body :virtual?))
+          "Expected handler thread to be a virtual thread")
+
+      (ig/halt! system))))
+
+(s/deftest virtual-threads-disabled-test
+  (testing "Handler threads are platform threads when :use-virtual-threads is false"
+    (let [system (ig/init (assoc-in system-components
+                                    [::component.config/config :overrides]
+                                    {:service {:host                "0.0.0.0"
+                                               :port                8080
+                                               :use-virtual-threads false}}))
+          response (http/get "http://localhost:8080/thread-info"
+                             {:as               :json
+                              :throw-exceptions false})]
+
+      (is (match? {:status 200} response))
+      (is (false? (-> response :body :virtual?))
+          "Expected handler thread to be a platform thread")
 
       (ig/halt! system))))
 

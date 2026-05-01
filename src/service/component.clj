@@ -5,7 +5,8 @@
             [io.pedestal.connector]
             [io.pedestal.http.jetty :as jetty]
             [service.interceptors :as io.interceptors])
-  (:import (org.eclipse.jetty.util BlockingArrayQueue)
+  (:import (org.eclipse.jetty.server Server)
+           (org.eclipse.jetty.util BlockingArrayQueue)
            (org.eclipse.jetty.util.thread QueuedThreadPool VirtualThreadPool)))
 
 (def ^:private default-idle-timeout-ms 30000)
@@ -67,8 +68,12 @@
                       (io.pedestal.connector/with-interceptors [io.interceptors/error-handler-interceptor
                                                                 (io.interceptors/components-interceptor components)])
                       (io.pedestal.connector/with-routes (:routes components))
-                      (jetty/create-connector {:io.pedestal.http.jetty/idle-timeout idle-timeout
-                                               :io.pedestal.http.jetty/thread-pool (build-thread-pool min-threads max-threads max-queue-size use-virtual-threads)}))]
+                      (jetty/create-connector {:container-options
+                                               {:thread-pool (build-thread-pool min-threads max-threads max-queue-size use-virtual-threads)
+                                                :configurator (fn [^Server server]
+                                                                (doseq [connector (.getConnectors server)]
+                                                                  (.setIdleTimeout connector idle-timeout))
+                                                                server)}}))]
     (io.pedestal.connector/start! connector)))
 
 (defmethod ig/halt-key! ::service

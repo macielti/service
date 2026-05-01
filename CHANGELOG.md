@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions
 of [keepachangelog.com](http://keepachangelog.com/).
 
-## 0.3.8 - 2026-04-30
+## 0.3.8 - 2026-05-01
 
 ### Added
 
@@ -11,6 +11,10 @@ of [keepachangelog.com](http://keepachangelog.com/).
 - Virtual thread support via `:use-virtual-threads` option (default `true`). On Java 21+, Jetty's `VirtualThreadPool` is used automatically, allowing thousands of concurrent requests at low memory cost. Falls back to platform threads on older JVMs.
 - Bounded request queue using `BlockingArrayQueue` when running with platform threads — requests beyond `:max-queue-size` are rejected with HTTP 503 instead of silently filling heap.
 - Documentation for thread pool and virtual thread configuration options in README.
+
+### Fixed
+
+- `:idle-timeout-ms` was previously silently ignored due to an incorrect Pedestal option key. It is now correctly applied to all Jetty connectors via the server configurator.
 
 ## 0.3.7 - 2026-03-08
 
