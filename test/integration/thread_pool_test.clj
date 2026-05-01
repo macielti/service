@@ -26,7 +26,8 @@
              ["/thread-info" :get [pedestal.service.interceptors/json-body
                                    (fn [_]
                                      {:status 200
-                                      :body   {:virtual? (.isVirtual (Thread/currentThread))}})]
+                                      :body   {:virtual? (-> (Thread/currentThread) .getClass .getName
+                                                             (clojure.string/includes? "VirtualThread"))}})]
               :route-name :thread-info]])
 
 (def system-components
