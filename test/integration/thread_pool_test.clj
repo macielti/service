@@ -1,34 +1,48 @@
 (ns thread-pool-test
-  (:require [clj-http.client :as http]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as http]
             [clojure.string :as str]
             [clojure.test :refer [is testing]]
             [common-clj.integrant-components.config :as component.config]
             [common-clj.integrant-components.prometheus :as component.prometheus]
             [common-clj.integrant-components.routes :as component.routes]
             [integrant.core :as ig]
-            [io.pedestal.service.interceptors :as pedestal.service.interceptors]
+            [io.pedestal.interceptor :as pedestal.interceptor]
             [matcher-combinators.test :refer [match?]]
             [schema.test :as s]
             [service.component :as component.service]
             [service.interceptors :as interceptors]))
 
+(def parse-json-body-interceptor
+  (pedestal.interceptor/interceptor
+   {:name ::parse-json-body
+    :enter (fn [ctx]
+             (let [body (-> ctx :request :body)
+                   body-str (if body
+                              (slurp body)
+                              "")]
+               (assoc-in ctx [:request :json-params]
+                         (if (str/blank? body-str)
+                           ""
+                           (json/decode body-str true)))))}))
+
 (def routes [["/test" :get [interceptors/http-request-in-handle-timing-interceptor
-                            pedestal.service.interceptors/json-body
                             (fn [{{:keys [config]} :components}]
                               {:status 200
-                               :body   config})]
+                               :headers {"Content-Type" "application/json;charset=UTF-8"}
+                               :body   (json/encode config)})]
               :route-name :test]
-             ["/blocking" :get [pedestal.service.interceptors/json-body
-                                (fn [_]
+             ["/blocking" :get [(fn [_]
                                   (Thread/sleep 500)
                                   {:status 200
-                                   :body   {:message "done"}})]
+                                   :headers {"Content-Type" "application/json;charset=UTF-8"}
+                                   :body   (json/encode {:message "done"})})]
               :route-name :blocking]
-             ["/thread-info" :get [pedestal.service.interceptors/json-body
-                                   (fn [_]
+             ["/thread-info" :get [(fn [_]
                                      {:status 200
-                                      :body   {:virtual? (-> (Thread/currentThread) .getClass .getName
-                                                             (str/includes? "VirtualThread"))}})]
+                                      :headers {"Content-Type" "application/json;charset=UTF-8"}
+                                      :body   (json/encode {:virtual? (-> (Thread/currentThread) .getClass .getName
+                                                                          (str/includes? "VirtualThread"))})})]
               :route-name :thread-info]])
 
 (def system-components

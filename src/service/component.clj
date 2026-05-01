@@ -14,8 +14,6 @@
 (def ^:private default-max-threads 50)
 (def ^:private default-max-queue-size 200)
 
-(def ^:private allow-all-origins (constantly true))
-
 (defn- java-version []
   (let [version (System/getProperty "java.version")
         major-version (Integer/parseInt (first (str/split version #"\.")))]
@@ -37,15 +35,9 @@
                          60000
                          (BlockingArrayQueue. max-queue-size)))))
 
-(defn ^:private allowed-origins
-  "Returns the allowed-origins value for Pedestal.
-  When a collection of origin strings is provided, returns it as a set.
-  Otherwise, allows all origins."
-  [origins]
-  (if (not-empty origins)
-    (set origins)
-    allow-all-origins))
-
+; CORS and other default request interceptors must be configured per-route in the consuming application.
+; Use `io.pedestal.connector/with-default-interceptors` or Pedestal route-level interceptors
+; to add CORS, authentication, or other cross-cutting concerns to your routes.
 (defmethod ig/init-key ::service
   [_ {:keys [components]}]
   (log/info :starting ::service)
@@ -57,14 +49,12 @@
         use-virtual-threads (if (contains? service-config :use-virtual-threads)
                               (:use-virtual-threads service-config)
                               true)
-        allowed-origins' (:allowed-origins service-config)
         connector (-> {:host            (:host service-config)
                        :port            (:port service-config)
                        :type            :jetty
                        :router          :sawtooth
                        :initial-context {}
                        :join?           false}
-                      (io.pedestal.connector/with-default-interceptors :allowed-origins (allowed-origins allowed-origins'))
                       (io.pedestal.connector/with-interceptors [io.interceptors/error-handler-interceptor
                                                                 (io.interceptors/components-interceptor components)])
                       (io.pedestal.connector/with-routes (:routes components))

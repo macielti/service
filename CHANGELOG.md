@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions
 of [keepachangelog.com](http://keepachangelog.com/).
 
+## 0.4.0 - 2026-05-01
+
+### Changed
+
+- **Breaking:** Removed connector-level CORS configuration (`:allowed-origins` option is no longer supported). CORS and other default interceptors must now be configured per-route in the consuming application using `io.pedestal.connector/with-default-interceptors` or Pedestal route-level interceptors.
+
 ## 0.3.8 - 2026-05-01
 
 ### Added

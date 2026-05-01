@@ -24,7 +24,6 @@ The service component accepts configuration through the `:service` key in your c
 | `:host`                | String              | Yes      | —                 | The host address to bind the server to (e.g., `"0.0.0.0"`).                                                   |
 | `:port`                | Integer             | Yes      | —                 | The port number to listen on (e.g., `8080`).                                                                   |
 | `:idle-timeout-ms`     | Integer             | No       | `30000`           | Jetty idle timeout in milliseconds. Connections idle beyond this duration are closed.                          |
-| `:allowed-origins`     | Collection\<String> | No       | Allow all origins | A collection of allowed origin strings for CORS. When omitted or empty, all origins are allowed.               |
 | `:min-threads`         | Integer             | No       | `8`               | Minimum number of threads kept alive in the Jetty thread pool.                                                 |
 | `:max-threads`         | Integer             | No       | `50`              | Maximum number of concurrent threads. Acts as a concurrency cap for both platform and virtual thread modes.    |
 | `:max-queue-size`      | Integer             | No       | `200`             | Maximum number of requests that can queue while all threads are busy (platform threads only). Requests beyond this limit are rejected with HTTP 503. |
@@ -48,7 +47,6 @@ Uses Jetty's `QueuedThreadPool` backed by a `BlockingArrayQueue` of size `:max-q
 {:service {:host                "0.0.0.0"
            :port                8080
            :idle-timeout-ms     60000
-           :allowed-origins     ["https://example.com" "https://app.example.com"]
            :min-threads         8
            :max-threads         200
            :max-queue-size      500
@@ -66,7 +64,31 @@ Uses Jetty's `QueuedThreadPool` backed by a `BlockingArrayQueue` of size `:max-q
 
 > **Note:** If `:idle-timeout-ms` is not provided, a default of **30 seconds** (`30000` ms) is applied to prevent stalled connections from tying up server resources.
 
-> **Note:** If `:allowed-origins` is not provided or is empty, the server will accept requests from **any origin**. In production, explicitly list trusted origins to prevent unwanted cross-origin access.
+## Interceptors
+
+CORS and other default request interceptors must be configured **in your consuming application**, not at the component level.
+
+The service component provides two built-in interceptors:
+- `error-handler-interceptor` — handles exception-to-response conversion.
+- `components-interceptor` — injects the Integrant components map into the request context.
+
+To add CORS, authentication, rate limiting, or other cross-cutting concerns, use one of these approaches in your application:
+
+**Option 1: Per-route interceptors**
+
+Define interceptors on individual routes in your route definitions:
+```clojure
+["/api/resource"
+ {:get {:handler my-handler
+        :interceptors [cors-interceptor auth-interceptor]}}]
+```
+
+**Option 2: Connector-level default interceptors**
+
+Use `io.pedestal.connector/with-default-interceptors` in your route setup to apply interceptors to all routes:
+```clojure
+(io.pedestal.connector/with-default-interceptors connector :allowed-origins cors-origins)
+```
 
 ## License
 
