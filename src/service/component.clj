@@ -35,7 +35,6 @@
                          60000
                          (BlockingArrayQueue. max-queue-size)))))
 
-
 ; CORS and other default request interceptors must be configured per-route in the consuming application.
 ; Use `io.pedestal.connector/with-default-interceptors` or Pedestal route-level interceptors
 ; to add CORS, authentication, or other cross-cutting concerns to your routes.
