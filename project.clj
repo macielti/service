@@ -8,7 +8,7 @@
             :url  "https://www.eclipse.org/legal/epl-2.0/"}
 
   :dependencies [[org.clojure/clojure "1.12.4"]
-                 [net.clojars.macielti/common-clj "46.1.4"]
+                 [net.clojars.macielti/common-clj "46.2.0"]
                  [io.pedestal/pedestal.service "0.8.1"]
                  [com.vodori/schema-conformer "0.1.2"]
                  [io.pedestal/pedestal.jetty "0.8.1"]
