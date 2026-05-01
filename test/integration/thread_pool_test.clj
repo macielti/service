@@ -1,5 +1,6 @@
 (ns thread-pool-test
   (:require [clj-http.client :as http]
+            [clojure.string :as str]
             [clojure.test :refer [is testing]]
             [common-clj.integrant-components.config :as component.config]
             [common-clj.integrant-components.prometheus :as component.prometheus]
@@ -27,7 +28,7 @@
                                    (fn [_]
                                      {:status 200
                                       :body   {:virtual? (-> (Thread/currentThread) .getClass .getName
-                                                             (clojure.string/includes? "VirtualThread"))}})]
+                                                             (str/includes? "VirtualThread"))}})]
               :route-name :thread-info]])
 
 (def system-components
