@@ -8,7 +8,7 @@
             [iapetos.export :as export]
             [integrant.core :as ig]
             [io.pedestal.connector.test :as test]
-            [io.pedestal.service.interceptors :as pedestal.service.interceptors]
+            [io.pedestal.interceptor :as pedestal.interceptor]
             [matcher-combinators.test :refer [match?]]
             [schema.core :as schema]
             [schema.test :as s]
@@ -17,19 +17,33 @@
 
 (def test-state (atom nil))
 
+(def parse-json-body-interceptor
+  (pedestal.interceptor/interceptor
+   {:name ::parse-json-body
+    :enter (fn [ctx]
+             (let [body (-> ctx :request :body)
+                   body-str (if body
+                              (slurp body)
+                              "")]
+               (assoc-in ctx [:request :json-params]
+                         (if (str/blank? body-str)
+                           ""
+                           (json/decode body-str true)))))}))
+
 (def routes [["/test" :get [interceptors/http-request-in-handle-timing-interceptor
-                            pedestal.service.interceptors/json-body
                             (fn [{{:keys [config]} :components}]
                               {:status 200
-                               :body   config})]
+                               :headers {"Content-Type" "application/json;charset=UTF-8"}
+                               :body   (json/encode config)})]
               :route-name :test]
-             ["/schema-validation-interceptor-test" :post [(interceptors/wire-in-body-schema {:test                       schema/Str
+             ["/schema-validation-interceptor-test" :post [parse-json-body-interceptor
+                                                           (interceptors/wire-in-body-schema {:test                       schema/Str
                                                                                               (schema/optional-key :type) schema/Keyword})
-                                                           pedestal.service.interceptors/json-body
                                                            (fn [{:keys [json-params]}]
                                                              (reset! test-state json-params)
                                                              {:status 200
-                                                              :body   {:test :schema-ok}})]
+                                                              :headers {"Content-Type" "application/json;charset=UTF-8"}
+                                                              :body   (json/encode {:test :schema-ok})})]
               :route-name :schema-validation-interceptor-test]])
 
 (def system-components

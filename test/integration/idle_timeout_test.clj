@@ -1,11 +1,13 @@
 (ns idle-timeout-test
-  (:require [clj-http.client :as http]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as http]
+            [clojure.string :as str]
             [clojure.test :refer [is testing]]
             [common-clj.integrant-components.config :as component.config]
             [common-clj.integrant-components.prometheus :as component.prometheus]
             [common-clj.integrant-components.routes :as component.routes]
             [integrant.core :as ig]
-            [io.pedestal.service.interceptors :as pedestal.service.interceptors]
+            [io.pedestal.interceptor :as pedestal.interceptor]
             [matcher-combinators.test :refer [match?]]
             [schema.test :as s]
             [service.component :as component.service]
@@ -13,17 +15,30 @@
   (:import (java.net Socket SocketTimeoutException)
            (java.io BufferedReader InputStreamReader PrintWriter)))
 
+(def parse-json-body-interceptor
+  (pedestal.interceptor/interceptor
+   {:name ::parse-json-body
+    :enter (fn [ctx]
+             (let [body (-> ctx :request :body)
+                   body-str (if body
+                              (slurp body)
+                              "")]
+               (assoc-in ctx [:request :json-params]
+                         (if (str/blank? body-str)
+                           ""
+                           (json/decode body-str true)))))}))
+
 (def routes [["/test" :get [interceptors/http-request-in-handle-timing-interceptor
-                            pedestal.service.interceptors/json-body
                             (fn [{{:keys [config]} :components}]
                               {:status 200
-                               :body   config})]
+                               :headers {"Content-Type" "application/json;charset=UTF-8"}
+                               :body   (json/encode config)})]
               :route-name :test]
-             ["/slow" :get [pedestal.service.interceptors/json-body
-                            (fn [_]
+             ["/slow" :get [(fn [_]
                               (Thread/sleep 2000)
                               {:status 200
-                               :body   {:message "slow response"}})]
+                               :headers {"Content-Type" "application/json;charset=UTF-8"}
+                               :body   (json/encode {:message "slow response"})})]
               :route-name :slow]])
 
 (def system-components
