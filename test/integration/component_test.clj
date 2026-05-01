@@ -49,7 +49,7 @@
     (testing "That we can fetch the test endpoint and access components from the request"
       (is (match? {:status  200
                    :headers {"Content-Type" "application/json;charset=UTF-8"}
-                   :body    "{\"service-name\":\"rango\",\"service\":{\"host\":\"0.0.0.0\",\"port\":8080},\"current-env\":\"test\"}"}
+                   :body    "{\"service-name\":\"rango\",\"service\":{\"host\":\"0.0.0.0\",\"port\":8080,\"min-threads\":8,\"max-threads\":50,\"max-queue-size\":200},\"current-env\":\"test\"}"}
                   (test/response-for connector :get "/test" :headers {"authorization" "Bearer test-token"}))))
 
     (testing "That we can't fetch the test endpoint without a valid schema"
