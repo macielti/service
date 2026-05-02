@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions
 of [keepachangelog.com](http://keepachangelog.com/).
 
+## 2.0.0 - 2026-05-01
+
+### Changed
+
+- **Breaking:** Replaced Jetty with Http-Kit as the HTTP container. Remove `pedestal.jetty` and add `pedestal.http-kit "0.8.1"` to your dependencies.
+- **Breaking:** Removed Jetty-specific config keys: `:idle-timeout-ms`, `:min-threads`, `:max-threads`, `:max-queue-size`, `:use-virtual-threads`. Use `:worker-threads` (optional, defaults to http-kit's default of 4 × CPU cores) instead.
+- **Breaking:** The component no longer registers default interceptors (`error-handler-interceptor`, `components-interceptor`). All interceptors must be added by the consuming application via `io.pedestal.connector/with-interceptors` or per-route definitions.
+
 ## 1.0.0 - 2026-05-01
 
 ### Changed

@@ -5,7 +5,6 @@
             [common-clj.integrant-components.config :as component.config]
             [common-clj.integrant-components.prometheus :as component.prometheus]
             [common-clj.integrant-components.routes :as component.routes]
-            [iapetos.export :as export]
             [integrant.core :as ig]
             [io.pedestal.connector.test :as test]
             [io.pedestal.interceptor :as pedestal.interceptor]
@@ -30,20 +29,20 @@
                            ""
                            (json/decode body-str true)))))}))
 
-(def routes [["/test" :get [interceptors/http-request-in-handle-timing-interceptor
-                            (fn [{{:keys [config]} :components}]
-                              {:status 200
+(def routes [["/test" :get [(fn [_]
+                              {:status  200
                                :headers {"Content-Type" "application/json;charset=UTF-8"}
-                               :body   (json/encode config)})]
+                               :body    "ok"})]
               :route-name :test]
-             ["/schema-validation-interceptor-test" :post [parse-json-body-interceptor
-                                                           (interceptors/wire-in-body-schema {:test                       schema/Str
-                                                                                              (schema/optional-key :type) schema/Keyword})
-                                                           (fn [{:keys [json-params]}]
-                                                             (reset! test-state json-params)
-                                                             {:status 200
-                                                              :headers {"Content-Type" "application/json;charset=UTF-8"}
-                                                              :body   (json/encode {:test :schema-ok})})]
+             ["/schema-validation-interceptor-test" :post [interceptors/error-handler-interceptor
+                                                            parse-json-body-interceptor
+                                                            (interceptors/wire-in-body-schema {:test                       schema/Str
+                                                                                               (schema/optional-key :type) schema/Keyword})
+                                                            (fn [{:keys [json-params]}]
+                                                              (reset! test-state json-params)
+                                                              {:status  200
+                                                               :headers {"Content-Type" "application/json;charset=UTF-8"}
+                                                               :body    (json/encode {:test :schema-ok})})]
               :route-name :schema-validation-interceptor-test]])
 
 (def system-components
@@ -56,15 +55,14 @@
                                                    :routes     (ig/ref ::component.routes/routes)}}})
 
 (s/deftest component-test
-  (let [system (ig/init system-components)
-        connector (-> system ::component.service/service)
-        prometheus-registry (-> system ::component.prometheus/prometheus :registry)]
+  (let [system    (ig/init system-components)
+        connector (-> system ::component.service/service)]
 
-    (testing "That we can fetch the test endpoint and access components from the request"
+    (testing "That we can fetch the test endpoint"
       (is (match? {:status  200
                    :headers {"Content-Type" "application/json;charset=UTF-8"}
-                   :body    "{\"service-name\":\"rango\",\"service\":{\"host\":\"0.0.0.0\",\"port\":8080,\"min-threads\":8,\"max-threads\":50,\"max-queue-size\":200},\"current-env\":\"test\"}"}
-                  (test/response-for connector :get "/test" :headers {"authorization" "Bearer test-token"}))))
+                   :body    "ok"}
+                  (test/response-for connector :get "/test"))))
 
     (testing "That we can't fetch the test endpoint without a valid schema"
       (reset! test-state nil)
@@ -103,11 +101,9 @@
                   (test/response-for connector :post "/schema-validation-interceptor-test"
                                      :headers {:content-type "application/json"}
                                      :body (json/encode {:test :ok
-                                                         :type :simple-test})))))
-    (is (= {:test "ok"
-            :type :simple-test}
-           @test-state))
-
-    (is (str/includes? (export/text-format prometheus-registry) "http_request_in_handle_timing_v2_sum{service=\"rango\",endpoint=\"test\",}"))
+                                                         :type :simple-test}))))
+      (is (= {:test "ok"
+              :type :simple-test}
+             @test-state)))
 
     (ig/halt! system)))

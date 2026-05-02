@@ -1,4 +1,4 @@
-(defproject net.clojars.macielti/service "1.0.0"
+(defproject net.clojars.macielti/service "2.0.0"
 
   :description "Service is a Pedestal service Integrant component"
 
@@ -11,7 +11,7 @@
                  [net.clojars.macielti/common-clj "46.2.0"]
                  [io.pedestal/pedestal.service "0.8.1"]
                  [com.vodori/schema-conformer "0.1.2"]
-                 [io.pedestal/pedestal.jetty "0.8.1"]
+                 [io.pedestal/pedestal.http-kit "0.8.1"]
                  [io.pedestal/pedestal.error "0.8.1"]
                  [org.clojure/tools.logging "1.3.1"]
                  [clj-commons/iapetos "0.1.14"]             ;;TODO Use prometheus-component dependency instead of iapetos

@@ -11,7 +11,7 @@ dependencies to your project:
 ``` clojure
   [net.clojars.macielti/service "x.y.z"]
   [io.pedestal/pedestal.service "0.8.1"]
-  [io.pedestal/pedestal.jetty "0.8.1"]
+  [io.pedestal/pedestal.http-kit "0.8.1"]
   [io.pedestal/pedestal.error "0.8.1"]
 ```
 
@@ -19,60 +19,35 @@ dependencies to your project:
 
 The service component accepts configuration through the `:service` key in your config map. The following options are available:
 
-| Key                    | Type                | Required | Default           | Description                                                                                                    |
-|------------------------|---------------------|----------|-------------------|----------------------------------------------------------------------------------------------------------------|
-| `:host`                | String              | Yes      | —                 | The host address to bind the server to (e.g., `"0.0.0.0"`).                                                   |
-| `:port`                | Integer             | Yes      | —                 | The port number to listen on (e.g., `8080`).                                                                   |
-| `:idle-timeout-ms`     | Integer             | No       | `30000`           | Jetty idle timeout in milliseconds. Connections idle beyond this duration are closed.                          |
-| `:min-threads`         | Integer             | No       | `8`               | Minimum number of threads kept alive in the Jetty thread pool.                                                 |
-| `:max-threads`         | Integer             | No       | `50`              | Maximum number of concurrent threads. Acts as a concurrency cap for both platform and virtual thread modes.    |
-| `:max-queue-size`      | Integer             | No       | `200`             | Maximum number of requests that can queue while all threads are busy (platform threads only). Requests beyond this limit are rejected with HTTP 503. |
-| `:use-virtual-threads` | Boolean             | No       | `true`            | When `true` and running on Java 21+, uses Jetty's `VirtualThreadPool` instead of `QueuedThreadPool`. Falls back to platform threads automatically on Java < 21. |
+| Key               | Type    | Required | Default                         | Description                                                                           |
+|-------------------|---------|----------|---------------------------------|---------------------------------------------------------------------------------------|
+| `:host`           | String  | Yes      | —                               | The host address to bind the server to (e.g., `"0.0.0.0"`).                          |
+| `:port`           | Integer | Yes      | —                               | The port number to listen on (e.g., `8080`).                                          |
+| `:worker-threads` | Integer | No       | http-kit default (4 × CPU cores) | Number of worker threads for handling requests. Passed directly to http-kit's server. |
 
-### Thread pool behaviour
+### Http-Kit worker threads
 
-The component selects the thread pool implementation at startup based on `:use-virtual-threads` and the detected JVM version:
+Http-Kit uses Java NIO to handle connections asynchronously with a fixed pool of worker threads.
 
-**Virtual threads (Java 21+, default)**
+**`:worker-threads` option**
 
-Uses Jetty's `VirtualThreadPool`. Each request runs in its own virtual thread, which is cheap to create (~few KB) and automatically yields during blocking I/O, allowing thousands of concurrent requests without stacking platform threads. Concurrency is bounded by `:max-threads` via a semaphore. `:min-threads` and `:max-queue-size` are ignored in this mode.
-
-**Platform threads (Java < 21, or `:use-virtual-threads false`)**
-
-Uses Jetty's `QueuedThreadPool` backed by a `BlockingArrayQueue` of size `:max-queue-size`. Requests are served by a pool of `:min-threads` to `:max-threads` platform threads. When all threads are busy and the queue is full, new requests are rejected immediately with **HTTP 503**, providing explicit backpressure instead of silently growing memory until OOM.
+Controls the number of threads processing requests. If not set, http-kit's default applies (typically 4 × available CPU cores). For most services the default is adequate; increase it for workloads with high thread utilisation or slow blocking handlers.
 
 ### Example
 
 ```clojure
-{:service {:host                "0.0.0.0"
-           :port                8080
-           :idle-timeout-ms     60000
-           :min-threads         8
-           :max-threads         200
-           :max-queue-size      500
-           :use-virtual-threads true}}
+{:service {:host           "0.0.0.0"
+           :port           8080
+           :worker-threads 16}}
 ```
-
-### Recommended values by workload
-
-| Scenario                    | `:min-threads` | `:max-threads` | `:max-queue-size` |
-|-----------------------------|----------------|----------------|-------------------|
-| IO-bound (DB, HTTP calls)   | `8`            | `100`–`200`    | `500`             |
-| CPU-bound                   | `4`            | `nCPU × 2`    | `50`              |
-| Small pods / low memory     | `4`            | `20`           | `100`             |
-| Java 21+ (virtual threads)  | —              | `500`+         | —                 |
-
-> **Note:** If `:idle-timeout-ms` is not provided, a default of **30 seconds** (`30000` ms) is applied to prevent stalled connections from tying up server resources.
 
 ## Interceptors
 
 CORS and other default request interceptors must be configured **in your consuming application**, not at the component level.
 
-The service component provides two built-in interceptors:
-- `error-handler-interceptor` — handles exception-to-response conversion.
-- `components-interceptor` — injects the Integrant components map into the request context.
+The service component does not register default interceptors. All interceptors must be explicitly added by the consuming application using `io.pedestal.connector/with-interceptors` or per-route definitions.
 
-To add CORS, authentication, rate limiting, or other cross-cutting concerns, use one of these approaches in your application:
+To add error handling, CORS, authentication, rate limiting, or other cross-cutting concerns, use one of these approaches in your application:
 
 **Option 1: Per-route interceptors**
 

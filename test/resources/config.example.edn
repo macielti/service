@@ -1,6 +1,4 @@
 {:test {:service-name "rango"
-        :service      {:host             "0.0.0.0"
-                       :port             8080
-                       :min-threads      8
-                       :max-threads      50
-                       :max-queue-size   200}}}
+        :service      {:host           "0.0.0.0"
+                       :port           8080
+                       :worker-threads 4}}}
